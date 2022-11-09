@@ -6,7 +6,6 @@ const UserSchema: Schema = new Schema<User_Interface>(
 	{
 		email: {
 			type: String,
-			required: [true, "Email is required"],
 			unique: [true, "Email must be unique"],
 			match:
 				/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
@@ -19,7 +18,7 @@ const UserSchema: Schema = new Schema<User_Interface>(
 		},
 		username: {
 			type: String,
-			unique: [true, "This user name have already exist"],
+			unique: [true, "This user name already exist"],
 		},
 		phone: {
 			type: String,
@@ -43,6 +42,7 @@ const UserSchema: Schema = new Schema<User_Interface>(
 		},
 		password: {
 			type: String,
+			select: false,
 			minlength: [6, "Password should have at least 6 characters"],
 		},
 		isAdmin: {
@@ -60,6 +60,9 @@ UserSchema.pre("save", async function (next) {
 	}
 
 	const salt = await bcrypt.genSalt(10);
+	if (!user.username || user.username === "") {
+		user.username = user.email;
+	}
 	const hash = bcrypt.hashSync(user.password, salt);
 	user.password = hash;
 });

@@ -2,12 +2,12 @@ import jwt from "jsonwebtoken";
 import { JWTDecode } from "../types/JWTDecode.interface";
 
 export function generate_token(payload: object): string {
-	return jwt.sign({ payload }, process.env.JWT_PRIVATE_KEY as string);
+	return jwt.sign({ payload }, process.env.JWT_SECRET as string);
 }
 
 export function verifyJWT(token: string): JWTDecode {
 	try {
-		const decode = jwt.verify(token, process.env.JWT_PRIVATE_KEY as string);
+		const decode = jwt.verify(token, process.env.JWT_SECRET as string);
 		return {
 			valid: true,
 			expired: false,

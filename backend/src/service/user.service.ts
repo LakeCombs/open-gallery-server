@@ -3,6 +3,7 @@ import logger from "../utils/logger";
 import { Query_Interface } from "../types/query.types";
 import { User_Interface } from "../types/user.types";
 import { generate_token } from "../utils/jwt";
+import bcrypt from "bcryptjs";
 
 export const CREATE_USER = async (
 	input: User_Interface
@@ -12,7 +13,7 @@ export const CREATE_USER = async (
 		logger.info(`A new user with id ${new_user?._id} have been created`);
 		return {
 			status: true,
-			data: new_user,
+			data: { ...new_user?._doc, user_token: generate_token(new_user?._id) },
 		};
 	} catch (error: any) {
 		logger.error(error);
@@ -31,8 +32,6 @@ export const LOGIN_USER = async ({
 	password: string;
 }): Promise<any> => {
 	try {
-		const action = "User login";
-
 		if (!input || !password) {
 			return {
 				status: false,
@@ -55,17 +54,39 @@ export const LOGIN_USER = async ({
 		if (!user) {
 			return {
 				status: false,
-				action: action,
+				error: "No user found",
 			};
 		}
 
-		const confirmPassword: Boolean = await user.comparePassword(password);
+		const getPassword = await User.findOne(
+			{
+				$or: [
+					{ email: input },
+					{
+						phone: input,
+					},
+					{
+						username: input,
+					},
+				],
+			},
+			{ password }
+		);
+
+		const confirmPassword = await bcrypt.compare(
+			password,
+			getPassword?.password as unknown as string
+		);
 
 		if (user && confirmPassword) {
 			return {
-				data: { ...user?._doc, user_token: generate_token(user?._id) },
 				status: true,
-				action: action,
+				data: { ...user?._doc, user_token: generate_token(user?._id) },
+			};
+		} else {
+			return {
+				status: false,
+				error: `Sorry! your password is incorrect `,
 			};
 		}
 	} catch (error: any) {

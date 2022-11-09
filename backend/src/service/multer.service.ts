@@ -1,6 +1,6 @@
 import { Request } from "express";
 import multer, { FileFilterCallback } from "multer";
-import logger from "./logger";
+import logger from "../utils/logger";
 
 const upload_to_cloudinary = multer({
 	storage: multer.diskStorage({}),
